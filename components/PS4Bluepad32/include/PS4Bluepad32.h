@@ -40,6 +40,7 @@ void begin();
 void update();
 bool isConnected();
 bool getData(Data& data);
+bool resetMac();
 
 }  // namespace ps4
 

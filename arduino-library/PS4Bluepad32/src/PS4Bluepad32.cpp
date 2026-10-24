@@ -11,22 +11,17 @@ namespace {
 
 constexpr char kPreferencesNamespace[] = "ps4-bluepad32";
 constexpr char kMacKey[] = "controller-mac";
-constexpr uint32_t kButtonDebounceMs = 40;
 constexpr size_t kBluetoothAddressSize = 6;
 
 ControllerPtr activeController = nullptr;
 Preferences preferences;
 int8_t ledPin = 2;
-int8_t macResetPin = 27;
 bool started = false;
 bool preferencesReady = false;
 bool storageReady = false;
 bool savedMacValid = false;
 bool learnControllerMac = false;
 uint8_t savedMac[kBluetoothAddressSize] = {};
-bool resetButtonRawState = false;
-bool resetButtonStableState = false;
-uint32_t resetButtonLastChange = 0;
 
 bool sameAddress(const uint8_t* left, const uint8_t* right) {
     for (size_t i = 0; i < kBluetoothAddressSize; ++i) {
@@ -151,15 +146,15 @@ uint32_t readButtons(ControllerPtr controller) {
     return buttons;
 }
 
-void resetControllerMac() {
+bool resetControllerMac() {
     if (!preferencesReady) {
         Serial.println("[PS4] ERROR: NVS Preferences is unavailable; MAC reset failed.");
-        return;
+        return false;
     }
 
     if (preferences.isKey(kMacKey) && !preferences.remove(kMacKey)) {
         Serial.println("[PS4] ERROR: Failed to clear controller MAC from NVS.");
-        return;
+        return false;
     }
 
     storageReady = true;
@@ -172,51 +167,22 @@ void resetControllerMac() {
         Serial.println("[PS4] Disconnecting controller. Pair the controller to save its MAC again.");
         activeController->disconnect();
     }
-}
-
-void pollMacResetButton() {
-    if (macResetPin < 0) {
-        return;
-    }
-
-    const bool rawState = digitalRead(static_cast<uint8_t>(macResetPin)) == HIGH;
-    const uint32_t now = millis();
-
-    if (rawState != resetButtonRawState) {
-        resetButtonRawState = rawState;
-        resetButtonLastChange = now;
-    }
-
-    if (now - resetButtonLastChange >= kButtonDebounceMs &&
-        resetButtonStableState != resetButtonRawState) {
-        resetButtonStableState = resetButtonRawState;
-        if (resetButtonStableState) {
-            resetControllerMac();
-        }
-    }
+    return true;
 }
 
 }  // namespace
 
-bool begin(int8_t builtinLedPin, int8_t controllerMacResetPin) {
+bool begin(int8_t builtinLedPin) {
     if (started) {
         Serial.println("[PS4] ERROR: begin() may only be called once.");
         return false;
     }
     started = true;
     ledPin = builtinLedPin;
-    macResetPin = controllerMacResetPin;
 
     if (ledPin >= 0) {
         pinMode(static_cast<uint8_t>(ledPin), OUTPUT);
         setLed(false);
-    }
-
-    if (macResetPin >= 0) {
-        pinMode(static_cast<uint8_t>(macResetPin), INPUT_PULLDOWN);
-        resetButtonRawState = digitalRead(static_cast<uint8_t>(macResetPin)) == HIGH;
-        resetButtonStableState = resetButtonRawState;
-        resetButtonLastChange = millis();
     }
 
     preferencesReady = preferences.begin(kPreferencesNamespace, false);
@@ -227,7 +193,7 @@ bool begin(int8_t builtinLedPin, int8_t controllerMacResetPin) {
         const size_t storedLength = preferences.getBytesLength(kMacKey);
         if (storedLength != kBluetoothAddressSize ||
             preferences.getBytes(kMacKey, savedMac, kBluetoothAddressSize) != kBluetoothAddressSize) {
-            Serial.println("[PS4] ERROR: Saved controller MAC is invalid; press the reset button to pair again.");
+            Serial.println("[PS4] ERROR: Saved controller MAC is invalid; call ps4::resetMac() to pair again.");
             storageReady = false;
         } else {
             savedMacValid = true;
@@ -240,10 +206,6 @@ bool begin(int8_t builtinLedPin, int8_t controllerMacResetPin) {
         Serial.println("[PS4] No saved controller MAC; first controller will be saved.");
     }
 
-    if (preferencesReady && macResetPin >= 0 && resetButtonStableState) {
-        resetControllerMac();
-    }
-
     BP32.setup(&onControllerConnected, &onControllerDisconnected);
     BP32.enableVirtualDevice(false);
     Serial.println("[PS4] Waiting for a controller. Hold SHARE + PS to pair.");
@@ -254,7 +216,6 @@ void update() {
     if (!started) {
         return;
     }
-    pollMacResetButton();
     BP32.update();
 }
 
@@ -285,6 +246,14 @@ bool getData(Data& data) {
     data.l2 = triggerPercent(activeController->brake());
     data.r2 = triggerPercent(activeController->throttle());
     return true;
+}
+
+bool resetMac() {
+    if (!started) {
+        Serial.println("[PS4] ERROR: Call begin() before resetMac().");
+        return false;
+    }
+    return resetControllerMac();
 }
 
 }  // namespace ps4

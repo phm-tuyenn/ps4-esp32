@@ -129,13 +129,13 @@ bật chế độ ghép đôi trên tay cầm dự định ghép với ESP32 đ�
 đầu tiên.
 
 MAC được lưu trong NVS nên vẫn còn sau khi rút nguồn và cắm ESP32 lại. Để xóa
-MAC và học lại, nối nút nhấn thường mở giữa **GPIO27 và 3V3**, sau đó nhấn nút.
-Firmware khử dội nút và reset một lần cho mỗi lần nhấn; không cần khởi động lại.
-ESP32 sẽ ngắt tay cầm hiện tại nếu có, rồi lưu MAC của tay cầm tiếp theo kết nối.
-Tắt tay cầm cũ trước khi reset nếu muốn ghép một tay cầm khác; sau đó giữ
-**SHARE + PS** trên tay cầm mới để đưa nó vào chế độ ghép đôi.
+MAC và học lại, gọi `ps4::resetMac()` trong chương trình sau khi `ps4::begin()`
+đã chạy. Hàm trả về `true` nếu xóa MAC thành công; tay cầm hiện tại sẽ bị ngắt
+nếu đang kết nối, và tay cầm tiếp theo sẽ được lưu. Có thể gọi hàm từ menu,
+command handler hoặc sự kiện nút nhấn của ứng dụng, không cần dùng GPIO27 hay
+khởi động lại.
 
-GPIO27 dùng `INPUT_PULLDOWN`, vì vậy nút nối chân GPIO27 lên 3V3 khi nhấn.
-Không nối GPIO27 với 5V. Giữ nút trong lúc bật nguồn cũng xóa MAC. Chức năng
-reset chỉ xóa MAC allowlist, không xóa khóa Bluetooth đã ghép trước đó; hãy tắt
-các tay cầm khác trong lúc học MAC mới để tránh ESP32 lưu nhầm tay cầm.
+Tắt tay cầm cũ trước khi reset nếu muốn ghép một tay cầm khác; sau đó giữ
+**SHARE + PS** trên tay cầm mới để đưa nó vào chế độ ghép đôi. Hàm chỉ xóa MAC
+allowlist đã lưu, không xóa khóa Bluetooth đã ghép trước đó. Tắt các tay cầm
+khác trong lúc ghép để tránh ESP32 lưu nhầm.

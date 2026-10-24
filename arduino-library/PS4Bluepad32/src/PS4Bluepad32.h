@@ -37,10 +37,11 @@ struct Data {
     uint8_t r2;
 };
 
-bool begin(int8_t ledPin = 2, int8_t macResetPin = 27);
+bool begin(int8_t ledPin = 2);
 void update();
 bool isConnected();
 bool getData(Data& data);
+bool resetMac();
 
 }  // namespace ps4
 

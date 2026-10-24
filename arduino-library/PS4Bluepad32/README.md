@@ -88,11 +88,10 @@ void loop() {
 }
 ```
 
-The full button mask list is in `src/PS4Bluepad32.h`. `begin()` accepts optional
-LED and MAC-reset pin numbers; defaults are GPIO2 and GPIO27. Pass `-1` to
-disable either pin, for example `ps4::begin(LED_BUILTIN, 27)`.
+The full button mask list is in `src/PS4Bluepad32.h`. `begin()` accepts an
+optional LED pin; it defaults to GPIO2. Pass `-1` to disable LED control.
 
-## Saved controller MAC and reset button
+## Reset the saved controller MAC
 
 On first pairing, the MAC of the first valid gamepad is saved in ESP32
 Preferences (NVS). It persists across power cycles. After that, a controller
@@ -101,15 +100,26 @@ callback. The Arduino Bluepad32 package does not expose the ESP-IDF allowlist
 used by the ESP-IDF component, so this is callback-level rejection rather than
 filtering before the Bluetooth connection begins.
 
-The default reset input is GPIO27 configured as `INPUT_PULLDOWN`. Connect a
-normally-open push button between **GPIO27 and 3V3**. Pressing it clears the
-saved MAC and disconnects the current controller; the next valid controller
-that sends a gamepad report is saved. Turn off the old controller before
-resetting if you want to pair a different one. Do not connect GPIO27 to 5V.
+Call `ps4::resetMac()` from your sketch when you want to forget the saved
+controller. Call `ps4::begin()` first. The function returns `true` when the
+saved MAC was cleared; it disconnects the active controller, if any, and the
+next gamepad to connect will be saved. It returns `false` and logs an error if
+the library is not initialized or NVS cannot clear the MAC.
 
-If your board uses different pins, pass them to `begin(ledPin, resetPin)`.
-Use `-1` to disable a pin; for example, `ps4::begin(-1, 27)` disables LED
-control but leaves MAC reset enabled.
+For example, call it from your own menu, command handler, or button event:
+
+```cpp
+void forgetControllerAndRePair() {
+    if (!ps4::resetMac()) {
+        Serial.println("Could not reset the saved controller MAC.");
+    }
+}
+```
+
+Turn off the old controller before resetting if you want to pair a different
+one. The function clears the saved MAC, not Bluetooth bond keys.
+Keep other controllers off while pairing the replacement. In the included
+SerialMonitor example, send `r` in Serial Monitor to reset the saved MAC.
 
 ## Notes
 

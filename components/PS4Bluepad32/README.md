@@ -118,8 +118,24 @@ controller report is available. `Data::buttons` is a bitmask of the `BUTTON_*`
 constants. Stick axes are signed percentages from -100 to 100 (positive Y is
 up); L2 and R2 are percentages from 0 to 100.
 
-The component uses GPIO2 for the built-in LED and GPIO27 for the MAC reset
-button. Connect a normally-open push button between GPIO27 and 3V3 to clear the
-saved controller MAC and learn the next controller. Do not connect GPIO27 to 5V.
+The component uses GPIO2 for the built-in LED. Call `ps4::resetMac()` after
+`ps4::begin()` to clear the saved controller MAC/allowlist. It returns `true`
+on success, disconnects the active controller if any, and saves the next
+controller that connects. It returns `false` and prints an error if called
+before initialization or if Bluepad32 cannot clear the allowlist.
+
+For example, call it from your own menu, command handler, or button event:
+
+```cpp
+void forgetControllerAndRePair() {
+    if (!ps4::resetMac()) {
+        Console.println("Could not reset the saved controller MAC.");
+    }
+}
+```
+
+Turn off the old controller before resetting if you want to pair a different
+one, and keep other controllers off while pairing. This clears the allowlist,
+not Bluetooth bond keys.
 
 See `examples/SerialMonitor` for a complete serial monitor example.

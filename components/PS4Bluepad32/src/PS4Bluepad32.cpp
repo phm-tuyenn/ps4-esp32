@@ -8,14 +8,10 @@ namespace ps4 {
 namespace {
 
 constexpr uint8_t kBuiltinLedPin = 2;
-constexpr uint8_t kMacResetPin = 27;
-constexpr uint32_t kButtonDebounceMs = 40;
 
 ControllerPtr activeController = nullptr;
 bool learnControllerMac = false;
-bool resetButtonRawState = false;
-bool resetButtonStableState = false;
-uint32_t resetButtonLastChange = 0;
+bool started = false;
 
 bool allowlistHasAddresses() {
     const bd_addr_t* addresses = nullptr;
@@ -31,11 +27,15 @@ bool allowlistHasAddresses() {
     return false;
 }
 
-void resetControllerMac() {
+bool resetControllerMac() {
+    const bool allowlistWasEnabled = uni_bt_allowlist_is_enabled();
     uni_bt_allowlist_set_enabled(false);
     if (!uni_bt_allowlist_remove_all()) {
         Console.println("[PS4] ERROR: Could not clear saved controller MAC.");
-        return;
+        if (allowlistWasEnabled) {
+            uni_bt_allowlist_set_enabled(true);
+        }
+        return false;
     }
 
     learnControllerMac = true;
@@ -45,6 +45,7 @@ void resetControllerMac() {
         Console.println("[PS4] Disconnecting controller. Pair the controller to save its MAC again.");
         activeController->disconnect();
     }
+    return true;
 }
 
 void learnAndLockControllerMac(ControllerPtr controller) {
@@ -140,37 +141,13 @@ uint32_t readButtons(ControllerPtr controller) {
     return buttons;
 }
 
-void pollMacResetButton() {
-    const bool rawState = digitalRead(kMacResetPin) == HIGH;
-    const uint32_t now = millis();
-
-    if (rawState != resetButtonRawState) {
-        resetButtonRawState = rawState;
-        resetButtonLastChange = now;
-    }
-
-    if (now - resetButtonLastChange >= kButtonDebounceMs && resetButtonStableState != resetButtonRawState) {
-        resetButtonStableState = resetButtonRawState;
-        if (resetButtonStableState) {
-            resetControllerMac();
-        }
-    }
-}
-
 }  // namespace
 
 void begin() {
     pinMode(kBuiltinLedPin, OUTPUT);
     digitalWrite(kBuiltinLedPin, LOW);
-    pinMode(kMacResetPin, INPUT_PULLDOWN);
 
-    resetButtonRawState = digitalRead(kMacResetPin) == HIGH;
-    resetButtonStableState = resetButtonRawState;
-    resetButtonLastChange = millis();
-
-    if (resetButtonStableState) {
-        resetControllerMac();
-    } else if (uni_bt_allowlist_is_enabled() || allowlistHasAddresses()) {
+    if (uni_bt_allowlist_is_enabled() || allowlistHasAddresses()) {
         uni_bt_allowlist_set_enabled(true);
         Console.println("[PS4] Saved controller MAC found; allowlist enabled.");
     } else {
@@ -180,11 +157,11 @@ void begin() {
 
     BP32.setup(&onControllerConnected, &onControllerDisconnected);
     BP32.enableVirtualDevice(false);
+    started = true;
     Console.println("[PS4] Waiting for a controller. Hold SHARE + PS to pair.");
 }
 
 void update() {
-    pollMacResetButton();
     BP32.update();
 }
 
@@ -205,6 +182,14 @@ bool getData(Data& data) {
     data.l2 = triggerPercent(activeController->brake());
     data.r2 = triggerPercent(activeController->throttle());
     return true;
+}
+
+bool resetMac() {
+    if (!started) {
+        Console.println("[PS4] ERROR: Call begin() before resetMac().");
+        return false;
+    }
+    return resetControllerMac();
 }
 
 }  // namespace ps4

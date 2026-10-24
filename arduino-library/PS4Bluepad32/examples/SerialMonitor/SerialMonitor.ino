@@ -47,9 +47,19 @@ void setup() {
     if (!ps4::begin()) {
         Serial.println("PS4Bluepad32 could not initialize NVS or validate its saved MAC.");
     }
+    Serial.println("Send 'r' in the Serial Monitor to forget the saved controller.");
 }
 
 void loop() {
+    if (Serial.available() > 0) {
+        const char command = static_cast<char>(Serial.read());
+        if (command == 'r' || command == 'R') {
+            if (!ps4::resetMac()) {
+                Serial.println("Could not reset the saved controller MAC.");
+            }
+        }
+    }
+
     ps4::update();
 
     if (!ps4::isConnected()) {
