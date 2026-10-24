@@ -102,11 +102,17 @@ L2/R2 ra Serial Monitor ở 115200 baud.
 
 Hướng dẫn chi tiết về cài component và API nằm tại
 [`components/PS4Bluepad32/README.md`](./components/PS4Bluepad32/README.md).
-Đây là ESP-IDF component, không phải Arduino library cài bằng Library Manager.
-Project ESP-IDF hoặc PlatformIO dùng `framework = espidf` có thể chép thư mục
-`components/PS4Bluepad32` vào `components/` của project, sau đó khai báo
-`REQUIRES PS4Bluepad32` trong `main/CMakeLists.txt`. Các dependency Bluepad32,
-Arduino core và BTstack phải được project cung cấp riêng.
+Đây là ESP-IDF component dành cho project PlatformIO dùng `framework = espidf`.
+
+## Thư viện Arduino IDE
+
+Thư viện Arduino IDE riêng nằm tại
+[`arduino-library/PS4Bluepad32`](./arduino-library/PS4Bluepad32). Cài board
+package **ESP32 + Bluepad32**, sau đó chép thư mục `PS4Bluepad32` vào
+`Documents\Arduino\libraries\PS4Bluepad32`. Hướng dẫn từng bước và ví dụ nằm
+trong [README của Arduino library](./arduino-library/PS4Bluepad32/README.md).
+Đây là thư viện Arduino thật với `library.properties`, nhưng chưa được phát
+hành trên Arduino Library Manager.
 
 ## Kết nối tay cầm
 
