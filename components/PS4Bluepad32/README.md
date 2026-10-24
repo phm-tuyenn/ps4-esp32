@@ -8,7 +8,6 @@ reading button and analog state. It is designed for PlatformIO projects using
 
 - [Download the complete PlatformIO project as ZIP](https://github.com/phm-tuyenn/ps4-esp32/archive/refs/heads/main.zip)
 - [Browse the PS4Bluepad32 component](https://github.com/phm-tuyenn/ps4-esp32/tree/main/components/PS4Bluepad32)
-- [Download the component folder as a ZIP](https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fphm-tuyenn%2Fps4-esp32%2Ftree%2Fmain%2Fcomponents%2FPS4Bluepad32)
 
 The simplest way to try the library is to download or clone the complete
 repository and build it as-is. The repository includes the PlatformIO
