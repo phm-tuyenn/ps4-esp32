@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef PS4_BLUEPAD32_H
 #define PS4_BLUEPAD32_H
 

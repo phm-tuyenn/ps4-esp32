@@ -1,8 +1,10 @@
-# PS4Bluepad32 for Arduino IDE
+# PS4Bluepad32
 
-Arduino IDE library wrapper for the official ESP32 + Bluepad32 board package.
-It provides a small API for DualShock 4 button, joystick, and trigger input,
-and saves the first paired controller MAC in ESP32 Preferences.
+Arduino library for the official ESP32 + Bluepad32 board package. It provides
+a small API for DualShock 4 button, joystick, and trigger input, and saves the
+first paired controller MAC in ESP32 Preferences.
+
+Repository: <https://github.com/phm-tuyenn/ps4-esp32-lib>
 
 ## Requirements
 
@@ -28,15 +30,16 @@ and saves the first paired controller MAC in ESP32 Preferences.
 
 ## Install this library
 
-1. Download the project ZIP from
-   <https://github.com/phm-tuyenn/ps4-esp32/archive/refs/heads/main.zip>.
-2. Extract the ZIP.
-3. Copy the folder
-   `ps4-esp32-main/arduino-library/PS4Bluepad32` into the Arduino sketchbook's
-   `libraries` directory. The default Windows path is
-   `Documents\Arduino\libraries\PS4Bluepad32`.
-4. Restart Arduino IDE. The library should appear under **File → Examples →
-   PS4Bluepad32 → SerialMonitor**.
+After the library is indexed, search for **PS4Bluepad32** in Arduino IDE's
+Library Manager and install it there.
+
+Until then, download the ZIP from
+<https://github.com/phm-tuyenn/ps4-esp32-lib/archive/refs/heads/main.zip>,
+extract it, and copy the extracted `ps4-esp32-lib-main` folder into the
+Arduino sketchbook's `libraries` directory, renaming it to `PS4Bluepad32`.
+The default Windows path is `Documents\Arduino\libraries\PS4Bluepad32`.
+Restart Arduino IDE; the example will appear under **File → Examples →
+PS4Bluepad32 → SerialMonitor**.
 
 ## Select the board and upload the example
 
@@ -112,7 +115,10 @@ control but leaves MAC reset enabled.
 
 - This library requires the **ESP32 + Bluepad32** board package; the standard
   ESP32 board package is not enough.
-- It is installed by copying the library folder into the Arduino sketchbook's
-  `libraries` directory. It is not yet published in Arduino Library Manager.
-- The sibling `components/PS4Bluepad32` folder is a separate ESP-IDF component
-  for PlatformIO projects using `framework = espidf`.
+- The sibling `components/PS4Bluepad32` folder in the main project is a
+  separate ESP-IDF component for PlatformIO projects using `framework = espidf`.
+
+## License
+
+This library is distributed under the GNU General Public License v3.0 or later.
+See [LICENSE](LICENSE).

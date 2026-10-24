@@ -106,13 +106,13 @@ Hướng dẫn chi tiết về cài component và API nằm tại
 
 ## Thư viện Arduino IDE
 
-Thư viện Arduino IDE riêng nằm tại
-[`arduino-library/PS4Bluepad32`](./arduino-library/PS4Bluepad32). Cài board
-package **ESP32 + Bluepad32**, sau đó chép thư mục `PS4Bluepad32` vào
-`Documents\Arduino\libraries\PS4Bluepad32`. Hướng dẫn từng bước và ví dụ nằm
-trong [README của Arduino library](./arduino-library/PS4Bluepad32/README.md).
-Đây là thư viện Arduino thật với `library.properties`, nhưng chưa được phát
-hành trên Arduino Library Manager.
+Thư viện Arduino IDE độc lập được phát hành tại
+<https://github.com/phm-tuyenn/ps4-esp32-lib>. Tìm **PS4Bluepad32** trong
+Library Manager khi thư viện được lập chỉ mục; hướng dẫn cài đặt board
+**ESP32 + Bluepad32** và cách cài thủ công có trong
+[README của Arduino library](./arduino-library/PS4Bluepad32/README.md).
+Thư mục [`arduino-library/PS4Bluepad32`](./arduino-library/PS4Bluepad32) ở
+repository này là bản nguồn được đồng bộ.
 
 ## Kết nối tay cầm
 
