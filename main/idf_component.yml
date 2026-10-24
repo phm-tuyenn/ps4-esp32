@@ -1,0 +1,13 @@
+dependencies:
+  idf:
+    version: ">=5.5.0"
+  bluepad32:
+    path: ../managed_components/bluepad32
+  bluepad32_arduino:
+    path: ../managed_components/bluepad32_arduino
+  arduino:
+    path: ../managed_components/arduino
+  cmd_nvs:
+    path: ../managed_components/cmd_nvs
+  cmd_system:
+    path: ../managed_components/cmd_system
