@@ -1,7 +1,8 @@
-# PS4 Bluepad32 Serial Monitor
+# PS4 Bluepad32 Controller API
 
-ESP32 dùng Bluepad32 để kết nối tay cầm DualShock 4 và in các nút vừa nhấn ra
-serial monitor. Firmware không tạo Wi-Fi AP và không chạy web server.
+ESP32 dùng Bluepad32 để kết nối tay cầm DualShock 4. API được đóng gói thành
+ESP-IDF component trong `components/PS4Bluepad32`; ví dụ đang được build nằm
+trong `src/main.cpp`. Firmware không tạo Wi-Fi AP và không chạy web server.
 
 ## Build và nạp firmware
 
@@ -24,21 +25,94 @@ pio run -e esp32doit-devkit-v1 -t upload
 pio device monitor -b 115200
 ```
 
+## API tay cầm
+
+Trong chương trình của bạn, include `PS4Bluepad32.h` và gọi API như sau:
+
+```cpp
+#include <PS4Bluepad32.h>
+
+void setup() {
+    ps4::begin();
+}
+
+void loop() {
+    ps4::update();  // Gọi liên tục trong loop để xử lý Bluetooth.
+
+    if (ps4::isConnected()) {
+        ps4::Data data;
+        if (ps4::getData(data)) {  // true khi vừa nhận được report mới
+            if (data.buttons & ps4::BUTTON_CROSS) {
+                // Cross đang được nhấn
+            }
+
+            int8_t leftX = data.leftX;   // -100..100 %
+            int8_t leftY = data.leftY;   // -100..100 %, dương hướng lên
+            int8_t rightX = data.rightX;
+            int8_t rightY = data.rightY;
+            uint8_t l2 = data.l2;        // 0..100 %
+            uint8_t r2 = data.r2;        // 0..100 %
+            (void)leftX;
+            (void)leftY;
+            (void)rightX;
+            (void)rightY;
+            (void)l2;
+            (void)r2;
+        }
+    }
+}
+```
+
+`ps4::begin()` khởi tạo Bluepad32, bật quét kết nối, cấu hình LED và nút reset
+MAC. `ps4::update()` phải được gọi liên tục. `ps4::isConnected()` kiểm tra kết
+nối hiện tại. `ps4::getData(data)` chép dữ liệu mới nhất vào `data` và trả về
+`true` chỉ khi có report mới trong lượt update đó.
+
+### Dùng component trong project ESP-IDF khác
+
+Tải thư mục `components/PS4Bluepad32` từ repository này vào thư mục
+`components/PS4Bluepad32` của project. Project cần tích hợp sẵn các ESP-IDF
+components `bluepad32`, `bluepad32_arduino`, `arduino` và `btstack`; component
+này khai báo chúng làm dependency.
+
+Trong `main/CMakeLists.txt` của project, thêm `PS4Bluepad32` vào `REQUIRES`:
+
+```cmake
+idf_component_register(
+    SRCS "main.cpp"
+    INCLUDE_DIRS "."
+    REQUIRES PS4Bluepad32
+)
+```
+
+Sau đó include `<PS4Bluepad32.h>` trong mã nguồn. Hướng dẫn cài đặt và ví dụ
+ngắn cũng có trong `components/PS4Bluepad32/README.md`.
+
+`data.buttons` là bitmask; các bit được định nghĩa bằng `ps4::BUTTON_CROSS`,
+`BUTTON_CIRCLE`, `BUTTON_SQUARE`, `BUTTON_TRIANGLE`, `BUTTON_L1`, `BUTTON_R1`,
+`BUTTON_L2`, `BUTTON_R2`, `BUTTON_L3`, `BUTTON_R3`, `BUTTON_SHARE`,
+`BUTTON_OPTIONS`, `BUTTON_PS`, `BUTTON_TOUCHPAD`, và `BUTTON_DPAD_UP/DOWN/LEFT/RIGHT`.
+Joystick trả về -100%..100% với vùng chết nhỏ ở giữa; cò L2/R2 trả về 0%..100%.
+LED tích hợp trên GPIO2 sáng khi tay cầm kết nối và tắt khi ngắt kết nối.
+
+`src/main.cpp` là ví dụ hoạt động: in các nút mới nhấn cùng giá trị joystick và
+L2/R2 ra Serial Monitor ở 115200 baud.
+
+## Dùng component trong project khác
+
+Hướng dẫn chi tiết về cài component và API nằm tại
+[`components/PS4Bluepad32/README.md`](./components/PS4Bluepad32/README.md).
+Đây là ESP-IDF component, không phải Arduino library cài bằng Library Manager.
+Project ESP-IDF hoặc PlatformIO dùng `framework = espidf` có thể chép thư mục
+`components/PS4Bluepad32` vào `components/` của project, sau đó khai báo
+`REQUIRES PS4Bluepad32` trong `main/CMakeLists.txt`. Các dependency Bluepad32,
+Arduino core và BTstack phải được project cung cấp riêng.
+
 ## Kết nối tay cầm
 
 1. Mở serial monitor.
 2. Giữ **SHARE + PS** trên tay cầm DualShock 4 đến khi đèn nhấp nháy.
-3. Khi serial monitor báo tay cầm đã kết nối, nhấn các nút. Mỗi lần nhấn sẽ
-   được in một dòng, ví dụ `[PS4] Pressed: Cross (X)`.
-
-Firmware log các nút △ ○ × □, D-pad, Share, Options, PS, touchpad, L1/R1/L2/R2
-và L3/R3. Nút được log khi chuyển từ nhả sang nhấn; giữ nút không tạo log lặp.
-Hai joystick được log theo X/Y từ -100% đến 100%; trục Y dương hướng lên.
-L2/R2 được log từ 0% đến 100%. Giá trị analog được log khi phần trăm thay đổi,
-với vùng chết nhỏ ở giữa joystick để tránh nhiễu khi cần ở vị trí nghỉ.
-LED tích hợp trên GPIO2 sáng khi tay cầm kết nối và tắt khi ngắt kết nối.
-Nếu có dữ liệu thô từ tay cầm nhưng không nhận diện được nút, serial monitor
-cũng in các mask `buttons`, `misc` và `dpad` khi chúng thay đổi.
+3. Chờ dòng `[PS4] Connected`, sau đó nhấn nút hoặc di chuyển cần analog.
 
 ## Dùng nhiều ESP32 và tay cầm
 
